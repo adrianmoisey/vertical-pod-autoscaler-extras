@@ -1,0 +1,243 @@
+kind: CustomResourceStateMetrics
+spec:
+  resources:
+    - groupVersionKind:
+        group: autoscaling.k8s.io
+        kind: "VerticalPodAutoscaler"
+        version: "v1"
+      labelsFromPath:
+        namespace: [metadata, namespace]
+        target_api_version: [spec, targetRef, apiVersion]
+        target_kind: [spec, targetRef, kind]
+        target_name: [spec, targetRef, name]
+        verticalpodautoscaler: [metadata, name]
+      metricNamePrefix: "kube"
+      metrics:
+        - name: "verticalpodautoscaler_annotations"
+          help: "Kubernetes annotations converted to Prometheus labels."
+          each:
+            type: Info
+            info:
+              labelsFromPath:
+                annotation_*: [metadata, annotations]
+        - name: "verticalpodautoscaler_labels"
+          help: "Kubernetes labels converted to Prometheus labels."
+          each:
+            type: Info
+            info:
+              labelsFromPath:
+                label_*: [metadata, labels]
+        - name: "verticalpodautoscaler_spec_updatepolicy_updatemode"
+          help: "Update mode of the VerticalPodAutoscaler."
+          errorLogV: 1
+          each:
+            type: StateSet
+            stateSet:
+              labelName: "update_mode"
+              path: [spec, updatePolicy, updateMode]
+              list: ["Off", "Initial", "Recreate", "InPlaceOrRecreate", "InPlace", "Auto"]
+        - name: "verticalpodautoscaler_spec_updatepolicy_minreplicas"
+          help: "Minimum number of replicas that must be alive for the VerticalPodAutoscaler updater to evict a pod."
+          errorLogV: 1
+          each:
+            type: Gauge
+            gauge:
+              path: [spec, updatePolicy, minReplicas]
+        - name: "verticalpodautoscaler_spec_updatepolicy_evictafteroomseconds"
+          help: "Seconds after pod start during which an OOM makes the pod eligible for eviction by the VerticalPodAutoscaler updater."
+          errorLogV: 1
+          each:
+            type: Gauge
+            gauge:
+              path: [spec, updatePolicy, evictAfterOOMSeconds]
+        - name: "verticalpodautoscaler_spec_resourcepolicy_container_policies_mode"
+          help: "Whether the VerticalPodAutoscaler is enabled for containers matching the name."
+          errorLogV: 1
+          each:
+            type: StateSet
+            stateSet:
+              labelName: "mode"
+              path: [spec, resourcePolicy, containerPolicies]
+              labelsFromPath:
+                container: [containerName]
+              valueFrom: [mode]
+              list: ["Auto", "Off"]
+        - name: "verticalpodautoscaler_spec_resourcepolicy_container_policies_controlledvalues"
+          help: "Which resource values the VerticalPodAutoscaler controls for containers matching the name."
+          errorLogV: 1
+          each:
+            type: StateSet
+            stateSet:
+              labelName: "controlled_values"
+              path: [spec, resourcePolicy, containerPolicies]
+              labelsFromPath:
+                container: [containerName]
+              valueFrom: [controlledValues]
+              list: ["RequestsAndLimits", "RequestsOnly"]
+        - name: "verticalpodautoscaler_spec_resourcepolicy_container_policies_minallowed_memory"
+          help: "Minimum memory resources the VerticalPodAutoscaler can set for containers matching the name."
+          errorLogV: 1
+          commonLabels:
+            unit: "byte"
+            resource: "memory"
+          each:
+            type: Gauge
+            gauge:
+              path: [spec, resourcePolicy, containerPolicies]
+              labelsFromPath:
+                container: [containerName]
+              valueFrom: [minAllowed, memory]
+        - name: "verticalpodautoscaler_spec_resourcepolicy_container_policies_minallowed_cpu"
+          help: "Minimum cpu resources the VerticalPodAutoscaler can set for containers matching the name."
+          errorLogV: 1
+          commonLabels:
+            unit: "core"
+            resource: "cpu"
+          each:
+            type: Gauge
+            gauge:
+              path: [spec, resourcePolicy, containerPolicies]
+              labelsFromPath:
+                container: [containerName]
+              valueFrom: [minAllowed, cpu]
+        - name: "verticalpodautoscaler_spec_resourcepolicy_container_policies_maxallowed_memory"
+          help: "Maximum memory resources the VerticalPodAutoscaler can set for containers matching the name."
+          errorLogV: 1
+          commonLabels:
+            unit: "byte"
+            resource: "memory"
+          each:
+            type: Gauge
+            gauge:
+              path: [spec, resourcePolicy, containerPolicies]
+              labelsFromPath:
+                container: [containerName]
+              valueFrom: [maxAllowed, memory]
+        - name: "verticalpodautoscaler_spec_resourcepolicy_container_policies_maxallowed_cpu"
+          help: "Maximum cpu resources the VerticalPodAutoscaler can set for containers matching the name."
+          errorLogV: 1
+          commonLabels:
+            unit: "core"
+            resource: "cpu"
+          each:
+            type: Gauge
+            gauge:
+              path: [spec, resourcePolicy, containerPolicies]
+              labelsFromPath:
+                container: [containerName]
+              valueFrom: [maxAllowed, cpu]
+        - name: "verticalpodautoscaler_status_recommendation_containerrecommendations_lowerbound_memory"
+          help: "Lower bound of the memory recommendation for the container. Requests below this are likely to hurt performance or availability and may cause the VerticalPodAutoscaler updater to evict the pod."
+          commonLabels:
+            unit: "byte"
+            resource: "memory"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, recommendation, containerRecommendations]
+              labelsFromPath:
+                container: [containerName]
+              valueFrom: [lowerBound, memory]
+        - name: "verticalpodautoscaler_status_recommendation_containerrecommendations_lowerbound_cpu"
+          help: "Lower bound of the cpu recommendation for the container. Requests below this are likely to hurt performance or availability and may cause the VerticalPodAutoscaler updater to evict the pod."
+          commonLabels:
+            unit: "core"
+            resource: "cpu"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, recommendation, containerRecommendations]
+              labelsFromPath:
+                container: [containerName]
+              valueFrom: [lowerBound, cpu]
+        - name: "verticalpodautoscaler_status_recommendation_containerrecommendations_upperbound_memory"
+          help: "Upper bound of the memory recommendation for the container. Requests above this are likely wasted and may cause the VerticalPodAutoscaler updater to evict the pod."
+          commonLabels:
+            unit: "byte"
+            resource: "memory"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, recommendation, containerRecommendations]
+              labelsFromPath:
+                container: [containerName]
+              valueFrom: [upperBound, memory]
+        - name: "verticalpodautoscaler_status_recommendation_containerrecommendations_upperbound_cpu"
+          help: "Upper bound of the cpu recommendation for the container. Requests above this are likely wasted and may cause the VerticalPodAutoscaler updater to evict the pod."
+          commonLabels:
+            unit: "core"
+            resource: "cpu"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, recommendation, containerRecommendations]
+              labelsFromPath:
+                container: [containerName]
+              valueFrom: [upperBound, cpu]
+        - name: "verticalpodautoscaler_status_recommendation_containerrecommendations_target_memory"
+          help: "Target memory resources the VerticalPodAutoscaler recommends for the container."
+          commonLabels:
+            unit: "byte"
+            resource: "memory"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, recommendation, containerRecommendations]
+              labelsFromPath:
+                container: [containerName]
+              valueFrom: [target, memory]
+        - name: "verticalpodautoscaler_status_recommendation_containerrecommendations_target_cpu"
+          help: "Target cpu resources the VerticalPodAutoscaler recommends for the container."
+          commonLabels:
+            unit: "core"
+            resource: "cpu"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, recommendation, containerRecommendations]
+              labelsFromPath:
+                container: [containerName]
+              valueFrom: [target, cpu]
+        - name: "verticalpodautoscaler_status_recommendation_containerrecommendations_uncappedtarget_memory"
+          help: "Target memory resources the VerticalPodAutoscaler recommends for the container ignoring bounds."
+          commonLabels:
+            unit: "byte"
+            resource: "memory"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, recommendation, containerRecommendations]
+              labelsFromPath:
+                container: [containerName]
+              valueFrom: [uncappedTarget, memory]
+        - name: "verticalpodautoscaler_status_recommendation_containerrecommendations_uncappedtarget_cpu"
+          help: "Target cpu resources the VerticalPodAutoscaler recommends for the container ignoring bounds."
+          commonLabels:
+            unit: "core"
+            resource: "cpu"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, recommendation, containerRecommendations]
+              labelsFromPath:
+                container: [containerName]
+              valueFrom: [uncappedTarget, cpu]
+        - name: "verticalpodautoscaler_status_condition"
+          help: "The condition of this VerticalPodAutoscaler."
+          each:
+            type: StateSet
+            stateSet:
+              labelName: "status"
+              path: [status, conditions]
+              labelsFromPath:
+                condition: [type]
+              valueFrom: [status]
+              list: ["True", "False", "Unknown"]
+        # Not populated by older VPA releases.
+        - name: "verticalpodautoscaler_status_observedgeneration"
+          help: "The most recent generation observed by the VerticalPodAutoscaler recommender."
+          errorLogV: 1
+          each:
+            type: Gauge
+            gauge:
+              path: [status, observedGeneration]
